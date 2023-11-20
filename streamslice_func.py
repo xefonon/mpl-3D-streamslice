@@ -137,8 +137,8 @@ def plot_stream_3d(lines, ax=None, plane='xy', scale=1.):
             new_z = old_y
         elif plane == 'yz':
             new_x = scale * np.ones_like(old_x)
-            new_y = old_x
-            new_z = old_y
+            new_y = old_y
+            new_z = old_x
         else:
             raise ValueError('plane must be xy, xz or yz')
         ax.plot(new_x, new_y, new_z, color='k', linewidth=1.)
@@ -190,7 +190,7 @@ def plot_projections(grid, vectorial_quantity, ax=None, colormax=(None, None),
                      'z': zmin * np.ones_like(grid[argminz, 2]), 'plane': 'xy'}
     xz_projection = {'u': vectorial_quantity[argminy], 'x': grid[argminy, 0], 'y': grid[argminy, 2],
                      'z': ymin * np.ones_like(grid[argminy, 1]), 'plane': 'xz'}
-    yz_projection = {'u': vectorial_quantity[argminx], 'x': grid[argminx, 1], 'y': grid[argminx, 2],
+    yz_projection = {'u': vectorial_quantity[argminx], 'x': grid[argminx, 2], 'y': grid[argminx, 1],
                      'z': xmin * np.ones_like(grid[argminx, 0]), 'plane': 'yz'}
 
     # Plot each projection
@@ -283,5 +283,6 @@ if __name__ == '__main__':
         cbar = fig.colorbar(q, ax=ax, shrink=0.5)
         cbar.ax.set_ylabel('Magnitude')
     fig.show()
+    fig.savefig('projections_contours.png', dpi=150, bbox_inches='tight')
 
 
