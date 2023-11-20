@@ -52,7 +52,7 @@ if plot_contours:
     cbar.ax.set_ylabel('Magnitude')
 fig.show()
 ```
-
+ 
 ![Example plot with contour of magnitude](projections_contours.png)
 
 
