@@ -42,7 +42,7 @@ def _arrow3D(ax, x, y, z, dx, dy, dz, *args, **kwargs):
 
 setattr(Axes3D, 'arrow3D', _arrow3D)
 
-def plot_contour(u, x, y, ax=None, tex=False, colormax=None, colormap='YlOrRd',
+def plot_contour(u, x, y, ax=None, tex=False, colormax=None, colormap='Oranges',
                  zdir='z', offset=0.):
     if tex:
         plt.rc('text', usetex=True)
@@ -58,21 +58,25 @@ def plot_contour(u, x, y, ax=None, tex=False, colormax=None, colormap='YlOrRd',
     dx = uu[..., 0]
     dy = uu[..., 1]
     vmin, vmax = colormax
+    levels = np.linspace(vmin, vmax, 10)
+    M = np.hypot(dy, dx)
+    M[M < vmin] = vmin
+    M[M > vmax] = vmax
     if zdir == 'x':
-        q = ax.contourf(np.hypot(dy, dx), Y, X, zdir=zdir, offset=offset + 0.03, cmap=colormap,
-                        alpha=0.5, vmin=vmin, vmax=vmax)
+        q = ax.contourf(M, Y, X, zdir=zdir, offset=offset + 0.03, cmap=colormap,
+                        alpha=0.5, vmin=vmin, vmax=vmax, levels = levels)
     elif zdir == 'y':
-        q = ax.contourf(X, np.hypot(dx, dy), Y, zdir=zdir, offset=offset + 0.03, cmap=colormap,
-                        alpha=0.5, vmin=vmin, vmax=vmax)
+        q = ax.contourf(X, M, Y, zdir=zdir, offset=offset + 0.03, cmap=colormap,
+                        alpha=0.5, vmin=vmin, vmax=vmax, levels = levels)
     elif zdir == 'z':
-        q = ax.contourf(X, Y, np.hypot(dx, dy), zdir=zdir, offset=offset + 0.03, cmap=colormap,
-                        alpha=0.5, vmin=vmin, vmax=vmax)
+        q = ax.contourf(X, Y, M, zdir=zdir, offset=offset + 0.03, cmap=colormap,
+                        alpha=0.5, vmin=vmin, vmax=vmax, levels = levels)
 
     # ax.set_ylim([offset, offset + 0.06])
     ax.set_box_aspect((1, 1, 1))
     return ax, q
 
-def plot_stream(u, x, y, ax=None, tex=False, colormax=None, colormap='YlOrRd'):
+def plot_stream(u, x, y, ax=None, tex=False, colormax=None, colormap='Oranges'):
     """
     Plot sound field quantities such as velocity or intensity using quiver
     ---------------------------------------------------------------------
@@ -102,7 +106,7 @@ def plot_stream(u, x, y, ax=None, tex=False, colormax=None, colormap='YlOrRd'):
     else:
         M = colormax
 
-    q = ax.streamplot(X, Y, dx, dy, color=M, cmap=colormap, density=.8, arrowstyle='fancy',
+    q = ax.streamplot(X, Y, dx, dy, color=M, cmap=colormap, density=.7, arrowstyle='fancy',
                       linewidth=1., broken_streamlines=True)
     ax.set_aspect('equal')
     ax.set_xlabel('x (m)')
@@ -115,7 +119,7 @@ def plot_stream(u, x, y, ax=None, tex=False, colormax=None, colormap='YlOrRd'):
 def plot_stream_3d(lines, ax=None, plane='xy', scale=1.):
     plt.rc('text', usetex=True)
 
-    arrow_size = 7.
+    arrow_size = 8.
 
     i = 0
     arrow_x = []
@@ -149,7 +153,7 @@ def plot_stream_3d(lines, ax=None, plane='xy', scale=1.):
             # make sure new_x, new_y, new_z have been plotted only once
             if (abs(new_x).sum() in arrow_x) and (abs(new_y).sum() in arrow_y) and (abs(new_z).sum() in arrow_z):
                 continue
-            arrow_vectors = np.column_stack((new_x[0] - new_x[1], new_y[0] - new_y[1], new_z[0] - new_z[1]))
+            arrow_vectors = np.column_stack((new_x[1] - new_x[0], new_y[1] - new_y[0], new_z[1] - new_z[0]))
             ax.arrow3D(new_x[0], new_y[0], new_z[0],
                        arrow_vectors[0, 0], arrow_vectors[0, 1], arrow_vectors[0, 2],
                        mutation_scale=arrow_size, color='k', linewidth=.7,
@@ -162,7 +166,7 @@ def plot_stream_3d(lines, ax=None, plane='xy', scale=1.):
     return ax
 
 def plot_projections(grid, vectorial_quantity, ax=None, colormax=(None, None),
-                     contours = True):
+                     contours = True, x_proj = 'min',  y_proj = 'min'):
     """
     Plot projections of the vector field Iz onto the cuboid walls.
     -------------------------------------------------------------
@@ -182,16 +186,30 @@ def plot_projections(grid, vectorial_quantity, ax=None, colormax=(None, None),
     xmax, ymax, zmax = np.max(grid, axis=0)
 
     argminx = np.argwhere(grid[:, 0] == xmin).squeeze(-1)
+    argmaxx = np.argwhere(grid[:, 0] == xmax).squeeze(-1)
+    if x_proj == 'min':
+        yz_ind = argminx
+        yz_scale = xmin
+    elif x_proj == 'max':
+        yz_ind = argmaxx
+        yz_scale = xmax
     argminy = np.argwhere(grid[:, 1] == ymin).squeeze(-1)
+    argmaxy = np.argwhere(grid[:, 1] == ymax).squeeze(-1)
+    if y_proj == 'min':
+        xz_ind = argminy
+        xz_scale = ymin
+    elif y_proj == 'max':
+        xz_ind = argmaxy
+        xz_scale = ymax
     argminz = np.argwhere(grid[:, 2] == zmin).squeeze(-1)
 
     # Create projections
     xy_projection = {'u': vectorial_quantity[argminz], 'x': grid[argminz, 0], 'y': grid[argminz, 1],
                      'z': zmin * np.ones_like(grid[argminz, 2]), 'plane': 'xy'}
-    xz_projection = {'u': vectorial_quantity[argminy], 'x': grid[argminy, 0], 'y': grid[argminy, 2],
-                     'z': ymin * np.ones_like(grid[argminy, 1]), 'plane': 'xz'}
-    yz_projection = {'u': vectorial_quantity[argminx], 'x': grid[argminx, 2], 'y': grid[argminx, 1],
-                     'z': xmin * np.ones_like(grid[argminx, 0]), 'plane': 'yz'}
+    xz_projection = {'u': vectorial_quantity[xz_ind], 'x': grid[xz_ind, 0], 'y': grid[xz_ind, 2],
+                     'z': xz_scale * np.ones_like(grid[xz_ind, 1]), 'plane': 'xz'}
+    yz_projection = {'u': vectorial_quantity[yz_ind], 'x': grid[yz_ind, 2], 'y': grid[yz_ind, 1],
+                     'z': yz_scale * np.ones_like(grid[yz_ind, 0]), 'plane': 'yz'}
 
     # Plot each projection
     if ax is None:
@@ -215,7 +233,7 @@ def plot_projections(grid, vectorial_quantity, ax=None, colormax=(None, None),
             # plot contour
             zdir = [s for s in 'xyz' if s not in projection['plane']][0]
             ax, q = plot_contour(projection['u'], projection['x'], projection['y'], tex=True,
-                                 ax=ax, colormap='YlOrRd', zdir=zdir, offset=projection['z'][0] - 0.03,
+                                 ax=ax, colormap='Oranges', zdir=zdir, offset=projection['z'][0] - 0.03,
                                  colormax=colormax)
         else:
             q = None
@@ -224,7 +242,12 @@ def plot_projections(grid, vectorial_quantity, ax=None, colormax=(None, None),
     ax.set_zlabel('z (m)')
     # ax.set_box_aspect((.3, .3, .3))
     ax.set_box_aspect((1, 1, 1))
-    ax.view_init(30, 45)
+    azi_init = 30
+    if x_proj == 'max':
+        azi_init  = 30 - 90
+    if y_proj == 'max':
+        azi_init = azi_init - 90
+    ax.view_init(azi_init, 45)
     # remove grid
     ax.grid(False)
     # create cuboid around the data and plot it
@@ -266,7 +289,7 @@ if __name__ == '__main__':
     grid = np.stack((X.ravel(), Y.ravel(), Z.ravel()), axis=-1)
     # create vector field
     u = np.sin(2 * np.pi * X) * np.cos(2 * np.pi * Y) * np.ones_like(Z)
-    v = np.cos(2 * np.pi * X) * np.sin(2 * np.pi * Y) * np.ones_like(Z)
+    v = np.cos(2 * np.pi * X) * (np.sin(2 * np.pi * Y))**2 * np.ones_like(Z)
     w = np.zeros_like(Z)
 
     vectorial_quantity = np.stack((u.ravel(), v.ravel(), w.ravel()), axis=-1)
@@ -283,6 +306,4 @@ if __name__ == '__main__':
         cbar = fig.colorbar(q, ax=ax, shrink=0.5)
         cbar.ax.set_ylabel('Magnitude')
     fig.show()
-    fig.savefig('projections_contours.png', dpi=150, bbox_inches='tight')
-
-
+    fig.savefig('projection_contours.png', dpi=300, bbox_inches='tight')
