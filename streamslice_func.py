@@ -299,7 +299,7 @@ if __name__ == '__main__':
     plot_contours = True
     # plot projections
     ax, q = plot_projections(grid, vectorial_quantity,
-                             colormax=(-1, 1), ax=ax,
+                             colormax=(0, 1), ax=ax,
                              contours = plot_contours)
     if plot_contours:
         # add colorbar

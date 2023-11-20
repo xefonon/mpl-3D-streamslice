@@ -24,7 +24,6 @@ The function returns the matplotlib axis object.
 ## Example
 
 ```
-
 # example of how to use the function
 # create grid
 x = np.linspace(0, 1, 10)
@@ -34,7 +33,7 @@ X, Y, Z = np.meshgrid(x, y, z)
 grid = np.stack((X.ravel(), Y.ravel(), Z.ravel()), axis=-1)
 # create vector field
 u = np.sin(2 * np.pi * X) * np.cos(2 * np.pi * Y) * np.ones_like(Z)
-v = np.cos(2 * np.pi * X) * np.sin(2 * np.pi * Y) * np.ones_like(Z)
+v = np.cos(2 * np.pi * X) * (np.sin(2 * np.pi * Y))**2 * np.ones_like(Z)
 w = np.zeros_like(Z)
 
 vectorial_quantity = np.stack((u.ravel(), v.ravel(), w.ravel()), axis=-1)
@@ -44,7 +43,7 @@ ax = fig.add_subplot(111, projection='3d')
 plot_contours = True
 # plot projections
 ax, q = plot_projections(grid, vectorial_quantity,
-                         colormax=(-1, 1), ax=ax,
+                         colormax=(0, 1), ax=ax,
                          contours = plot_contours)
 if plot_contours:
     # add colorbar
@@ -52,7 +51,6 @@ if plot_contours:
     cbar.ax.set_ylabel('Magnitude')
 fig.show()
 ```
-
 ![Example plot with contour of magnitude](projection_contours.png)
 
 
