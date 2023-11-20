@@ -53,7 +53,7 @@ if plot_contours:
 fig.show()
 ```
 
-![Example plot with contour of magnitude](projections_contours.png)
+![Example plot with contour of magnitude](projection_contours.png)
 
 
 
